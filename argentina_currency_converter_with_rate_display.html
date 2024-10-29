@@ -1,0 +1,119 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Argentina Currency Converter</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        .converter {
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
+            max-width: 350px;
+            text-align: center;
+        }
+        h2 {
+            color: #333;
+            font-size: 22px;
+            margin-bottom: 20px;
+        }
+        input, button {
+            padding: 12px;
+            margin: 12px 0;
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result, .rate-info {
+            font-size: 16px;
+            color: #555;
+            margin-top: 15px;
+            line-height: 1.5;
+        }
+        .rate-info {
+            background-color: #f9fafb;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="converter">
+        <h2>Currency Converter</h2>
+        <input type="number" id="amount" placeholder="Enter amount in ARS" required>
+        <button onclick="convertCurrency()">Convert to BRL</button>
+        <div id="result" class="result"></div>
+        <div id="rateInfo" class="rate-info"></div>
+    </div>
+
+    <script>
+        async function convertCurrency() {
+            const apiKey = '206867185eb80d72190c6093a794f43a';
+            const amount = document.getElementById('amount').value;
+            if (!amount) {
+                document.getElementById('result').innerText = 'Please enter an amount in ARS';
+                return;
+            }
+
+            try {
+                const now = new Date();
+                const formattedDate = now.toLocaleString();
+                
+                // Fetch ARS to USD (MEP) and USD to BRL conversion rates
+                const response = await fetch(`http://api.currencylayer.com/live?access_key=${apiKey}&currencies=ARS,BRL&format=1`);
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error.info);
+                }
+
+                // ARS to USD (MEP dollar) and USD to BRL rates
+                const arsToUsdRate = data.quotes.USDARS;
+                const usdToBrlRate = data.quotes.USDBRL;
+                
+                // Conversion calculations
+                const amountInUsdMep = amount / arsToUsdRate;  // ARS to USD (MEP)
+                const amountInBrl = amountInUsdMep * usdToBrlRate;  // USD to BRL
+
+                // Display conversion result
+                document.getElementById('result').innerText = `Converted amount: R$ ${amountInBrl.toFixed(2)}`;
+
+                // Display exchange rates and timestamps
+                document.getElementById('rateInfo').innerHTML = `
+                    <p><strong>Exchange Rates Used:</strong></p>
+                    <p>ARS to USD (MEP): ${arsToUsdRate}<br>
+                    USD to BRL: ${usdToBrlRate}</p>
+                    <p><strong>Date & Time of Query:</strong><br>${formattedDate}</p>
+                `;
+
+            } catch (error) {
+                document.getElementById('result').innerText = 'Error fetching exchange rates. Please try again later.';
+                console.error('Error:', error);
+            }
+        }
+    </script>
+</body>
+</html>
